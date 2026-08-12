@@ -1,9 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import { Repository } from 'typeorm';
+import { Employee } from './entities/employee.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class EmployeesService {
+  constructor(
+    @InjectRepository(Employee)
+    private readonly employeeRepo: Repository<Employee>
+  ) {}
+
   create(createEmployeeDto: CreateEmployeeDto) {
     return 'This action adds a new employee';
   }
@@ -14,6 +22,10 @@ export class EmployeesService {
 
   findOne(id: number) {
     return `This action returns a #${id} employee`;
+  }
+
+  findByEmail(email: string) {
+    return this.employeeRepo.findOne({ where: { email }});
   }
 
   update(id: number, updateEmployeeDto: UpdateEmployeeDto) {
