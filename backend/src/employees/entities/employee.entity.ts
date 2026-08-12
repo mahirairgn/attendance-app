@@ -21,7 +21,7 @@ export class Employee {
   @Column({ unique: true })
   email!: string;
 
-  @Column()
+  @Column( {name: 'password_hash' })
   password!: string;
 
   @Column({ name: 'employee_id', unique: true })
