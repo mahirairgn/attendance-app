@@ -1,26 +1,20 @@
-import { useState } from 'react';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
+import DashboardPage from './pages/DashboardPage';
+import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
 function App() {
-  const [token, setToken] = useState<string | null>(() =>
-    localStorage.getItem('access_token'),
-  );
-
-  function handleLoginSuccess(accessToken: string) {
-    localStorage.setItem('access_token', accessToken);
-    setToken(accessToken);
-  }
-
-  if (!token) {
-    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
-  }
-
   return (
-    <div>
-      <h1>Dashboard</h1>
-      <p>Kamu berhasil login.</p>
-    </div>
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+
+      <Route element={<ProtectedRoute />}>
+        <Route path="/dashboard" element={<DashboardPage />} />
+      </Route>
+
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
   );
 }
 

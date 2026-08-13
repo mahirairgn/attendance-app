@@ -1,11 +1,9 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-interface LoginPageProps {
-  onLoginSuccess: (token: string) => void;
-}
-
-function LoginPage({ onLoginSuccess }: LoginPageProps) {
+function LoginPage() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -29,7 +27,8 @@ function LoginPage({ onLoginSuccess }: LoginPageProps) {
         throw new Error(data.message || 'Login gagal');
       }
 
-      onLoginSuccess(data.access_token);
+      localStorage.setItem('access_token', data.access_token);
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login gagal');
     } finally {
