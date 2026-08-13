@@ -1,4 +1,7 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage, memoryStorage } from 'multer';
+import { extname } from 'path';
 import { AttendanceService } from './attendance.service';
 import { CreateAttendanceDto } from './dto/create-attendance.dto';
 import { UpdateAttendanceDto } from './dto/update-attendance.dto';
@@ -9,9 +12,26 @@ import { AuthGuard } from '@nestjs/passport';
 export class AttendanceController {
   constructor(private readonly attendanceService: AttendanceService) {}
 
-  @Post()
-  create(@Body() createAttendanceDto: CreateAttendanceDto) {
-    return this.attendanceService.create(createAttendanceDto);
+  @Post('/clock-in')
+  @UseInterceptors(
+    FileInterceptor('photo', { storage: memoryStorage() }),
+  )
+  clockIn(@Req() req, @UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('Foto wajib diupload');
+    }
+    return this.attendanceService.createClockIn(req.user.sub, file);
+  }
+
+  @Post('/clock-out')
+  @UseInterceptors(
+    FileInterceptor('photo', { storage: memoryStorage() }),
+  )
+  clockOut(@Req() req, @UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('Foto wajib diupload');
+    }
+    return this.attendanceService.createClockOut(req.user.sub, file);
   }
 
   @Get()
