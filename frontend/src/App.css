@@ -4,71 +4,19 @@
   place-content: center;
   place-items: center;
   padding: 20px;
+  background-color: #f0f2f5;
 }
 
 .login-page form {
-  width: 100%;
-  max-width: 360px;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 32px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: var(--shadow);
   text-align: left;
 }
 
-.login-page h1 {
-  font-size: 28px;
-  margin: 0 0 8px;
-  text-align: center;
-}
-
-.login-page label {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.login-field {
+  display: block;
+  margin-bottom: 6px;
   font-size: 14px;
-  color: var(--text-h);
-}
-
-.login-page input {
-  font: inherit;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--bg);
-  color: var(--text-h);
-
-  &:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 1px;
-  }
-}
-
-.login-page button[type='submit'] {
-  font: inherit;
-  font-weight: 500;
-  padding: 10px 16px;
-  border-radius: 8px;
-  border: none;
-  color: #fff;
-  background: var(--accent);
-  cursor: pointer;
-  transition: opacity 0.2s;
-
-  &:hover {
-    opacity: 0.9;
-  }
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-}
-
-.login-page .error {
-  font-size: 14px;
-  color: #e5484d;
-  margin: 0;
+  color:black;
 }

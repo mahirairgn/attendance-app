@@ -1,17 +1,18 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Input, Button, Card, Typography, message } from 'antd';
+
+const { Title } = Typography;
 
 function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     try {
@@ -30,7 +31,7 @@ function LoginPage() {
       localStorage.setItem('access_token', data.access_token);
       navigate('/dashboard', { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login gagal');
+      message.error(err instanceof Error ? err.message : 'Login gagal');
     } finally {
       setLoading(false);
     }
@@ -38,35 +39,42 @@ function LoginPage() {
 
   return (
     <div className="login-page">
-      <form onSubmit={handleSubmit}>
-        <h1>Login</h1>
+      <Card style={{ width: 360 }}>
+        <form onSubmit={handleSubmit}>
+          <Title level={3} style={{ textAlign: 'center', marginTop: 0 }}>
+            Login
+          </Title>
 
-        <label>
-          Email
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </label>
+          <div>
+            <label className="login-field" htmlFor="email">
+              Email
+            </label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
 
-        <label>
-          Password
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </label>
+          <div>
+            <label className="login-field" htmlFor="password">
+              Password
+            </label>
+            <Input.Password
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
 
-        {error && <p className="error">{error}</p>}
-
-        <button type="submit" disabled={loading}>
-          {loading ? 'Loading...' : 'Login'}
-        </button>
-      </form>
+          <Button type="primary" htmlType="submit" loading={loading} block>
+            Login
+          </Button>
+        </form>
+      </Card>
     </div>
   );
 }
