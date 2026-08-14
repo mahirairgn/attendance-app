@@ -20,7 +20,6 @@ interface TodayResponse {
   attendance: Attendance | null;
 }
 
-/** "07:59:02" -> 28742 detik sejak tengah malam */
 function toSeconds(time: string): number {
   const [h, m, s] = time.split(':').map(Number);
   return h * 3600 + m * 60 + (s || 0);
