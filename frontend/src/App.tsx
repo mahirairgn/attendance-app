@@ -4,6 +4,8 @@ import DashboardPage from './pages/DashboardPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AppLayout from './components/AppLayout';
 import './App.css';
+import EmployeePage from './pages/EmployeePage';
+import AdminRoute from './components/AdminRoute';
 
 function App() {
   return (
@@ -13,6 +15,10 @@ function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
+
+          <Route element={<AdminRoute />}>
+            <Route path="/employees" element={<EmployeePage />} />
+          </Route>
         </Route>
       </Route>
 

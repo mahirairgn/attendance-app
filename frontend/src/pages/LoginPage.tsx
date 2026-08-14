@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Input, Button, Card, Typography, message } from 'antd';
 
 const { Title } = Typography;
+const API_URL = 'http://localhost:3000';
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:3000/auth/login', {
+      const res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),

@@ -13,7 +13,7 @@ import { EmployeeRole } from './entities/employee.entity';
 export class EmployeesController {
   constructor(private readonly employeesService: EmployeesService) {}
 
-  @Post()
+  @Post('/create')
   create(@Body() createEmployeeDto: CreateEmployeeDto) {
     return this.employeesService.create(createEmployeeDto);
   }

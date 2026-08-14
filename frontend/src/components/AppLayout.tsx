@@ -6,27 +6,23 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { decodeToken } from '../lib/jwt';
 
 const { Header, Content } = Layout;
 const { Text } = Typography;
 
-/** Baca email dari payload JWT — cuma buat ditampilkan, bukan buat otorisasi. */
-function getEmailFromToken(): string {
-  const token = localStorage.getItem('access_token');
-  if (!token) return '';
-
-  try {
-    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    return JSON.parse(atob(base64)).email ?? '';
-  } catch {
-    return '';
-  }
-}
-
 function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const email = getEmailFromToken();
+  const payload = decodeToken();
+  const email = payload?.email ?? '';
+
+  const menuItems = [
+    { key: '/dashboard', label: <Link to="/dashboard">Absensi Hari Ini</Link> },
+    ...(payload?.role === 'admin'
+      ? [{ key: '/employees', label: <Link to="/employees">Employee</Link> }]
+      : []),
+  ];
 
   function handleLogout() {
     localStorage.removeItem('access_token');
@@ -45,12 +41,7 @@ function AppLayout() {
           mode="horizontal"
           selectedKeys={[location.pathname]}
           className="app-nav"
-          items={[
-            {
-              key: '/dashboard',
-              label: <Link to="/dashboard">Absensi Hari Ini</Link>,
-            },
-          ]}
+          items={menuItems}
         />
 
         <Dropdown
