@@ -34,6 +34,12 @@ export class AttendanceController {
     return this.attendanceService.createClockOut(req.user.sub, file);
   }
 
+  // TESTING PURPOSES ONLY
+  // @Get('/test')
+  // test() {
+  //   return this.attendanceService.test();
+  // }
+
   @Get()
   findAll() {
     return this.attendanceService.findAll();

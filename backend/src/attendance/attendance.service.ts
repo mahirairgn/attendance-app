@@ -14,12 +14,26 @@ export class AttendanceService {
     private readonly attendanceRepo: Repository<Attendance>
   ) {}
 
+   private isWeekend(date: Date) {
+    const day = date.getDay(); // 0 = Minggu, 6 = Sabtu
+    return day === 0 || day === 6;
+  }
+
+
   private todayDateString(): string {
-    return new Date().toISOString().split('T')[0];
+    const now = new Date(); // Timezone: UTC
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`; // Timezone: UTC+7
   }
   
   async createClockIn(employeeId: number, file: Express.Multer.File) {
-    const attendanceToday = await this.getToday(employeeId);
+    if (this.isWeekend(new Date())) {
+      throw new ConflictException("Gagal! Hari ini adalah hari libur");
+    }
+
+    const attendanceToday = (await this.getToday(employeeId)).attendance;
     if (attendanceToday) {
       throw new ConflictException("Gagal! Clock In hari ini sudah dilakukan")
     }
@@ -39,7 +53,11 @@ export class AttendanceService {
   }
 
   async createClockOut(employeeId: number, file: Express.Multer.File) {
-    const attendanceToday = await this.getToday(employeeId);
+    if (this.isWeekend(new Date())) {
+      throw new ConflictException("Gagal! Hari ini adalah hari libur");
+    }
+
+    const attendanceToday = (await this.getToday(employeeId)).attendance;
     if (!attendanceToday) {
       throw new NotFoundException("Gagal! Harap melakukan Clock In terlebih dahulu")
     }
@@ -67,8 +85,15 @@ export class AttendanceService {
   }
 
   async getToday(employeeId: number) {
-    return this.attendanceRepo.findOne({ 
-      where: { employee: { id: employeeId }, attendanceDate: this.todayDateString() }});
+    if (this.isWeekend(new Date())) {
+      return { isWorkingDay: false, attendance: null }
+    }
+
+    const todayAttendance = await this.attendanceRepo.findOne({
+      where: { employee: { id: employeeId }, attendanceDate: this.todayDateString() }
+    });
+    
+    return { isWorkingDay: true, attendance: todayAttendance }
   }
 
   async getHistory(employeeId: number) {
