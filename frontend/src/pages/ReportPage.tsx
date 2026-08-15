@@ -207,6 +207,7 @@ function ReportPage() {
             rowKey="employeeId"
             columns={columns}
             dataSource={filteredRecords}
+            scroll={{ x: 'max-content' }}
             pagination={{ pageSize: 10 }}
             locale={{
               emptyText: (

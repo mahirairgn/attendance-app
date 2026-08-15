@@ -287,6 +287,7 @@ function EmployeePage() {
           rowKey="id"
           columns={columns}
           dataSource={employees}
+          scroll={{ x: 'max-content' }}
           pagination={{ pageSize: 10 }}
         />
       )}

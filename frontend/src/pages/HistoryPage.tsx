@@ -177,6 +177,7 @@ function HistoryPage() {
           rowKey="id"
           columns={columns}
           dataSource={filteredHistory}
+          scroll={{ x: 'max-content' }}
           pagination={{ pageSize: 10 }}
           locale={{
             emptyText: (
