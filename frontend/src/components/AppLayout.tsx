@@ -8,10 +8,10 @@ import {
 } from '@ant-design/icons';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { decodeToken } from '../lib/jwt';
+import { API_URL } from '../lib/api';
 
 const { Header, Content } = Layout;
 const { Text } = Typography;
-const API_URL = 'http://localhost:3000';
 
 interface ChangePasswordValues {
   currentPassword: string;

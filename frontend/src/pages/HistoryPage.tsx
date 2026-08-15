@@ -1,13 +1,15 @@
-import { Button, DatePicker, Empty, Image, message, Modal, Space, Spin, Table, Tag, Typography } from "antd";
+import { Button, DatePicker, Empty, message, Space, Spin, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useMemo, useState } from "react";
 import dayjs, { Dayjs } from "dayjs";
 import { getAttendancePhotoUrl } from "../lib/viewPhoto";
 import { formatDuration, toSeconds } from '../lib/duration';
 import { EyeOutlined } from "@ant-design/icons";
+import AttendanceStatusTag from "../components/AttendanceStatusTag";
+import AttendanceDetailModal from "../components/AttendanceDetailModal";
+import { API_URL } from "../lib/api";
 
-const { Title, Text } = Typography;
-const API_URL = 'http://localhost:3000';
+const { Title } = Typography;
 
 interface Attendance {
   id: number;
@@ -27,13 +29,6 @@ function getRowStatus(record: Attendance): RowStatus | null {
   if (!record.clockInTime) return null;
   if (record.clockOutTime) return 'completed';
   return dayjs(record.attendanceDate).isSame(dayjs(), 'day') ? 'in_progress' : 'missing_out';
-}
-
-function StatusTag({ status }: { status: RowStatus | null }) {
-  if (status === 'completed') return <Tag color="success">Clocked Out</Tag>;
-  if (status === 'in_progress') return <Tag color="processing">Clocked In</Tag>;
-  if (status === 'missing_out') return <Tag color="warning">Missing Clock Out</Tag>;
-  return <>-</>;
 }
 
 function formatDate(date: string) {
@@ -131,7 +126,10 @@ function HistoryPage() {
     {
       title: 'Status',
       key: 'status',
-      render: (_, record) => <StatusTag status={getRowStatus(record)} />,
+      render: (_, record) => {
+        const status = getRowStatus(record);
+        return status && <AttendanceStatusTag status={status} />;
+      },
     },
     {
       title: 'Duration',
@@ -192,72 +190,18 @@ function HistoryPage() {
         />
       )}
 
-      <Modal
-        title="Attendance Detail"
+      <AttendanceDetailModal
         open={!!detail}
-        onCancel={closeDetail}
-        footer={null}
-      >
-        {detail && (
-          <Space orientation="vertical" size={16} style={{ width: '100%' }}>
-            <div>
-              <Text type="secondary">Date</Text>
-              <div>{formatDate(detail.attendanceDate)}</div>
-            </div>
-
-            <Space size={48} wrap>
-              <div>
-                <Text type="secondary">Clock In</Text>
-                <div>{detail.clockInTime ?? '-'}</div>
-              </div>
-              <div>
-                <Text type="secondary">Clock Out</Text>
-                <div>{detail.clockOutTime ?? '-'}</div>
-              </div>
-              <div>
-                <Text type="secondary">Status</Text>
-                <div>
-                  <StatusTag status={detailStatus} />
-                </div>
-              </div>
-              <div>
-                <Text type="secondary">Duration</Text>
-                <div>
-                  {detail.clockInTime && detail.clockOutTime
-                    ? formatDuration(toSeconds(detail.clockOutTime) - toSeconds(detail.clockInTime))
-                    : '-'}
-                </div>
-              </div>
-            </Space>
-
-            {photoLoading ? (
-              <div style={{ textAlign: 'center', padding: 24 }}>
-                <Spin />
-              </div>
-            ) : (
-              <Space size={16}>
-                {clockInPhoto && (
-                  <div>
-                    <Text type="secondary">Clock In Photo</Text>
-                    <div>
-                      <Image src={clockInPhoto} width={160} />
-                    </div>
-                  </div>
-                )}
-                {clockOutPhoto && (
-                  <div>
-                    <Text type="secondary">Clock Out Photo</Text>
-                    <div>
-                      <Image src={clockOutPhoto} width={160} />
-                    </div>
-                  </div>
-                )}
-                {!clockInPhoto && !clockOutPhoto && <Text type="secondary">No photos available</Text>}
-              </Space>
-            )}
-          </Space>
-        )}
-      </Modal>
+        onClose={closeDetail}
+        headerLabel="Date"
+        headerValue={detail ? formatDate(detail.attendanceDate) : ''}
+        clockInTime={detail?.clockInTime ?? null}
+        clockOutTime={detail?.clockOutTime ?? null}
+        status={detailStatus}
+        clockInPhotoUrl={clockInPhoto}
+        clockOutPhotoUrl={clockOutPhoto}
+        photoLoading={photoLoading}
+      />
     </div>
   )
 }

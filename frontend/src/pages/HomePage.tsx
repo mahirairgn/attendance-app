@@ -1,16 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
-import { Button, Card, Divider, Empty, Spin, Tag, Typography, message } from 'antd';
+import { Button, Card, Divider, Empty, Spin, Typography, message } from 'antd';
 import { CameraOutlined, CheckCircleFilled } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import Link from 'antd/es/typography/Link';
 import { viewAttendancePhoto } from '../lib/viewPhoto';
 import { formatDuration, toSeconds } from '../lib/duration';
+import AttendanceStatusTag, { type AttendanceStatus } from '../components/AttendanceStatusTag';
+import { API_URL } from '../lib/api';
 
 const { Text } = Typography;
-const API_URL = 'http://localhost:3000';
-
-type AttendanceStatus = 'holiday' | 'not_started' | 'in_progress' | 'completed' | 'missing_out' | 'absent';
 
 interface Attendance {
   id: number;
@@ -147,12 +146,7 @@ function HomePage() {
       <div className="home-clock">
         <Text type="secondary">{date}</Text>
         <div className="home-time">{now.toTimeString().slice(0, 8)}</div>
-
-        {status === 'holiday' && <Tag variant="outlined">Holiday</Tag>}
-        {status === 'not_started' && <Tag color="warning" variant="outlined">Not Clocked In</Tag>}
-        {status === 'in_progress' && <Tag color="processing" variant="outlined">Clocked In</Tag>}
-        {status === 'completed' && <Tag color="success" variant="outlined">Clocked Out</Tag>}
-        {status === 'absent' && <Tag color="error" variant="outlined">Absent</Tag>}
+        {status && <AttendanceStatusTag status={status} />}
       </div>
 
       <Card styles={{ body: { padding: 24 } }}>

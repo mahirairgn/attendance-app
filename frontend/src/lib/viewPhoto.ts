@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000';
+import { API_URL } from './api';
 
 export async function getAttendancePhotoUrl(
   attendanceId: number,

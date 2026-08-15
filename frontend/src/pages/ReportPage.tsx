@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Button, Card, Col, DatePicker, Empty, Image, Input, Modal, Row, Space, Spin, Statistic, Table, Tag, Typography, message } from 'antd';
+import { Button, Card, Col, DatePicker, Empty, Input, Row, Space, Spin, Statistic, Table, Typography, message } from 'antd';
 import { EyeOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { formatDuration, toSeconds } from '../lib/duration';
 import { getAttendancePhotoUrl } from '../lib/viewPhoto';
+import AttendanceStatusTag, { type AttendanceStatus } from '../components/AttendanceStatusTag';
+import AttendanceDetailModal from '../components/AttendanceDetailModal';
+import { API_URL } from '../lib/api';
 
-const { Title, Text } = Typography;
-const API_URL = 'http://localhost:3000';
-
-type Status = 'holiday' | 'not_started' | 'in_progress' | 'completed' | 'missing_out' | 'absent';
+const { Title } = Typography;
 
 interface ReportRecord {
   id: number | null;
@@ -21,7 +21,7 @@ interface ReportRecord {
   clockOutTime: string | null;
   clockInPhoto: string | null;
   clockOutPhoto: string | null;
-  status: Status;
+  status: AttendanceStatus;
 }
 
 interface ReportResponse {
@@ -30,26 +30,8 @@ interface ReportResponse {
   records: ReportRecord[];
 }
 
-const STATUS_LABEL: Record<Status, string> = {
-  holiday: 'Holiday',
-  not_started: 'Not Clocked In',
-  in_progress: 'Clocked In',
-  completed: 'Clocked Out',
-  missing_out: 'Missing Clock Out',
-  absent: 'Absent',
-};
-
-const STATUS_COLOR: Record<Status, string> = {
-  holiday: 'default',
-  not_started: 'default',
-  in_progress: 'processing',
-  completed: 'success',
-  missing_out: 'warning',
-  absent: 'error',
-};
-
 /** Dianggap "hadir": punya clock-in, terlepas udah clock-out, lupa clock-out, atau masih berlangsung. */
-function isAttended(status: Status): boolean {
+function isAttended(status: AttendanceStatus): boolean {
   return status === 'completed' || status === 'in_progress' || status === 'missing_out';
 }
 
@@ -156,11 +138,7 @@ function ReportPage() {
     {
       title: 'Status',
       dataIndex: 'status',
-      render: (status: Status) => (
-        <Tag color={STATUS_COLOR[status]} variant="outlined">
-          {STATUS_LABEL[status]}
-        </Tag>
-      ),
+      render: (status: AttendanceStatus) => <AttendanceStatusTag status={status} />,
     },
     {
       title: '',
@@ -251,69 +229,18 @@ function ReportPage() {
         </>
       )}
 
-      <Modal title="Attendance Detail" open={!!detail} onCancel={closeDetail} footer={null}>
-        {detail && (
-          <Space orientation="vertical" size={16} style={{ width: '100%' }}>
-            <div>
-              <Text type="secondary">Name</Text>
-              <div>{detail.fullName}</div>
-            </div>
-
-            <Space size={48} wrap>
-              <div>
-                <Text type="secondary">Clock In</Text>
-                <div>{detail.clockInTime ?? '-'}</div>
-              </div>
-              <div>
-                <Text type="secondary">Clock Out</Text>
-                <div>{detail.clockOutTime ?? '-'}</div>
-              </div>
-              <div>
-                <Text type="secondary">Status</Text>
-                <div>
-                  <Tag color={STATUS_COLOR[detail.status]} variant="outlined">
-                    {STATUS_LABEL[detail.status]}
-                  </Tag>
-                </div>
-              </div>
-              <div>
-                <Text type="secondary">Duration</Text>
-                <div>
-                  {detail.clockInTime && detail.clockOutTime
-                    ? formatDuration(toSeconds(detail.clockOutTime) - toSeconds(detail.clockInTime))
-                    : '-'}
-                </div>
-              </div>
-            </Space>
-
-            {photoLoading ? (
-              <div style={{ textAlign: 'center', padding: 24 }}>
-                <Spin />
-              </div>
-            ) : (
-              <Space size={16}>
-                {clockInPhoto && (
-                  <div>
-                    <Text type="secondary">Clock In Photo</Text>
-                    <div>
-                      <Image src={clockInPhoto} width={160} />
-                    </div>
-                  </div>
-                )}
-                {clockOutPhoto && (
-                  <div>
-                    <Text type="secondary">Clock Out Photo</Text>
-                    <div>
-                      <Image src={clockOutPhoto} width={160} />
-                    </div>
-                  </div>
-                )}
-                {!clockInPhoto && !clockOutPhoto && <Text type="secondary">No photo available</Text>}
-              </Space>
-            )}
-          </Space>
-        )}
-      </Modal>
+      <AttendanceDetailModal
+        open={!!detail}
+        onClose={closeDetail}
+        headerLabel="Name"
+        headerValue={detail?.fullName ?? ''}
+        clockInTime={detail?.clockInTime ?? null}
+        clockOutTime={detail?.clockOutTime ?? null}
+        status={detail?.status ?? null}
+        clockInPhotoUrl={clockInPhoto}
+        clockOutPhotoUrl={clockOutPhoto}
+        photoLoading={photoLoading}
+      />
     </div>
   );
 }

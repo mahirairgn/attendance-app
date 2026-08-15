@@ -2,9 +2,9 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input, Button, Card, Typography, message } from 'antd';
+import { API_URL } from '../lib/api';
 
 const { Title } = Typography;
-const API_URL = 'http://localhost:3000';
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -42,6 +42,7 @@ function LoginPage() {
     <div className="login-page">
       <Card style={{ width: 360 }}>
         <form onSubmit={handleSubmit}>
+
           <Title level={3} style={{ textAlign: 'center', marginTop: 0 }}>
             Login
           </Title>

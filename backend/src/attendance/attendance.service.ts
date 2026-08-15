@@ -29,17 +29,16 @@ export class AttendanceService {
 
    private isWeekend(date: Date) {
     const day = date.getDay(); // 0 = Minggu, 6 = Sabtu
-    // return day === 0 || day === 6;
-    return day === 0; // For testing, hanya Minggu yang dianggap hari libur
+    return day === 0 || day === 6;
   }
 
 
   private todayDateString(): string {
-    const now = new Date(); // Timezone: UTC
+    const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`; // Timezone: UTC+7
+    return `${year}-${month}-${day}`;
   }
 
   /** Tanggal yang sudah lewat: pasti sudah lewat jam pulang. Hari ini: cek jam sekarang. Masa depan: belum. */
