@@ -177,40 +177,36 @@ function ReportPage() {
         </div>
       ) : (
         <>
-          {report?.isWorkingDay !== false && (
-            <Row gutter={16} style={{ marginBottom: 16 }}>
-              <Col span={8}>
-                <Card>
-                  <Statistic title="Total Active Employees" value={records.length} />
-                </Card>
-              </Col>
-              <Col span={8}>
-                <Card>
-                  <Statistic title="Attended" value={attended} valueStyle={{ color: '#3f8600' }} />
-                </Card>
-              </Col>
-              <Col span={8}>
-                <Card>
-                  <Statistic title="Absent" value={absent} valueStyle={{ color: '#cf1322' }} />
-                </Card>
-              </Col>
-            </Row>
-          )}
+          <Row gutter={16} style={{ marginBottom: 16 }}>
+            <Col span={8}>
+              <Card>
+                <Statistic title="Total Active Employees" value={records.length} />
+              </Card>
+            </Col>
+            <Col span={8}>
+              <Card>
+                <Statistic title="Attended" value={attended} valueStyle={{ color: '#3f8600' }} />
+              </Card>
+            </Col>
+            <Col span={8}>
+              <Card>
+                <Statistic title="Absent" value={absent} valueStyle={{ color: '#cf1322' }} />
+              </Card>
+            </Col>
+          </Row>
 
-          {report?.isWorkingDay !== false && (
-            <Input.Search
-              placeholder="Search by employee name"
-              allowClear
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ marginBottom: 16 }}
-            />
-          )}
+          <Input.Search
+            placeholder="Search by employee name"
+            allowClear
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ marginBottom: 16 }}
+          />
 
           <Table
             rowKey="employeeId"
             columns={columns}
-            dataSource={report?.isWorkingDay === false ? [] : filteredRecords}
+            dataSource={filteredRecords}
             pagination={{ pageSize: 10 }}
             locale={{
               emptyText: (
@@ -218,7 +214,7 @@ function ReportPage() {
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
                   description={
                     report?.isWorkingDay === false
-                      ? 'Today is a non-working day, no attendance required'
+                      ? 'Today is a non-working day, no attendance logs recorded'
                       : 'No active employees found'
                   }
                   style={{ padding: 24 }}

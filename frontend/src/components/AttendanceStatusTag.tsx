@@ -1,7 +1,7 @@
 import { Tag } from 'antd';
 
 export type AttendanceStatus =
-  | 'holiday'
+  | 'off_day'
   | 'not_started'
   | 'in_progress'
   | 'completed'
@@ -9,7 +9,7 @@ export type AttendanceStatus =
   | 'absent';
 
 const STATUS_LABEL: Record<AttendanceStatus, string> = {
-  holiday: 'Holiday',
+  off_day: 'Off Day',
   not_started: 'Not Clocked In',
   in_progress: 'Clocked In',
   completed: 'Clocked Out',
@@ -18,7 +18,7 @@ const STATUS_LABEL: Record<AttendanceStatus, string> = {
 };
 
 const STATUS_COLOR: Record<AttendanceStatus, string> = {
-  holiday: 'default',
+  off_day: 'default',
   not_started: 'default',
   in_progress: 'processing',
   completed: 'success',

@@ -9,7 +9,7 @@ import { writeFile, mkdir } from 'fs/promises';
 import { join, extname, posix } from 'path';
 
 export type AttendanceStatus =
-  | 'holiday'
+  | 'off_day'
   | 'not_started'
   | 'in_progress'
   | 'completed'
@@ -50,18 +50,23 @@ export class AttendanceService {
   }
 
   private computeStatus(params: {
-    isHoliday: boolean;
+    isOffDay: boolean;
     dateString: string;
     clockInTime: string | null;
     clockOutTime: string | null;
   }): AttendanceStatus {
-    if (params.isHoliday) return 'holiday';
+    // Data absensi yang beneran ada harus menang duluan -- off_day cuma
+    // fallback kalau emang nggak ada clock-in sama sekali buat tanggal itu.
+    // (Skenario nyata: tanggal itu awalnya hari kerja pas orang clock-in,
+    // terus aturan weekend berubah/dikoreksi belakangan.)
     if (params.clockOutTime) return 'completed';
 
     if (params.clockInTime) {
       const isPastDate = params.dateString < this.todayDateString();
       return isPastDate ? 'missing_out' : 'in_progress';
     }
+
+    if (params.isOffDay) return 'off_day';
 
     if (this.isPastWorkHours(params.dateString)) return 'absent';
     return 'not_started';
@@ -129,24 +134,20 @@ export class AttendanceService {
 
   async getToday(employeeId: number) {
     const dateString = this.todayDateString();
-    const isHoliday = this.isWeekend(new Date());
-
-    if (isHoliday) {
-      return { isWorkingDay: false, attendance: null, status: 'holiday' as AttendanceStatus };
-    }
+    const isOffDay = this.isWeekend(new Date());
 
     const todayAttendance = await this.attendanceRepo.findOne({
       where: { employee: { id: employeeId }, attendanceDate: dateString }
     });
 
     const status = this.computeStatus({
-      isHoliday: false,
+      isOffDay,
       dateString,
       clockInTime: todayAttendance?.clockInTime ?? null,
       clockOutTime: todayAttendance?.clockOutTime ?? null,
     });
 
-    return { isWorkingDay: true, attendance: todayAttendance, status };
+    return { isWorkingDay: !isOffDay, attendance: todayAttendance, status };
   }
 
   async getHistory(employeeId: number) {
@@ -177,13 +178,13 @@ export class AttendanceService {
 
     const byEmployeeId = new Map(attendances.map((a) => [a.employee.id, a]));
 
-    const isHoliday = this.isWeekend(new Date(`${reportDate}T00:00:00`));
+    const isOffDay = this.isWeekend(new Date(`${reportDate}T00:00:00`));
 
     const records = employees.map((employee) => {
       const record = byEmployeeId.get(employee.id) ?? null;
 
       const status = this.computeStatus({
-        isHoliday,
+        isOffDay,
         dateString: reportDate,
         clockInTime: record?.clockInTime ?? null,
         clockOutTime: record?.clockOutTime ?? null,
@@ -203,7 +204,7 @@ export class AttendanceService {
       };
     });
 
-    return { date: reportDate, isWorkingDay: !isHoliday, records };
+    return { date: reportDate, isWorkingDay: !isOffDay, records };
   }
 
   async getPhotoPath(

@@ -154,7 +154,7 @@ function HomePage() {
           <div style={{ textAlign: 'center', padding: 32 }}>
             <Spin />
           </div>
-        ) : status === 'holiday' ? (
+        ) : status === 'off_day' ? (
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
             description="There is no shift scheduled for today. Have a great day off!"
