@@ -42,6 +42,14 @@ export class EmployeesService {
     return this.employeeRepo.find();
   }
 
+  /** Karyawan aktif saja, urut by nama. Dipakai modul lain (mis. laporan absensi harian). */
+  findAllActive() {
+    return this.employeeRepo.find({
+      where: { active: true },
+      order: { fullName: 'ASC' },
+    });
+  }
+
   findOne(id: number) {
     return `This action returns a #${id} employee`;
   }

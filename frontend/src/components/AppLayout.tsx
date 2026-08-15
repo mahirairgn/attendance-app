@@ -21,7 +21,10 @@ function AppLayout() {
     { key: '/dashboard', label: <Link to="/dashboard">Absensi Hari Ini</Link> },
     { key: '/history', label: <Link to="/history">Riwayat Absensi</Link> },
     ...(payload?.role === 'admin'
-      ? [{ key: '/employees', label: <Link to="/employees">Employee</Link> }]
+      ? [
+        { key: '/employees', label: <Link to="/employees">Employee</Link> },
+        { key: '/report', label: <Link to="/report">Absensi Karyawan</Link> },
+      ]
       : []),
   ];
 

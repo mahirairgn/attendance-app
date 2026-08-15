@@ -3,6 +3,7 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import EmployeePage from './pages/EmployeePage';
 import HistoryPage from './pages/HistoryPage';
+import ReportPage from './pages/ReportPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AppLayout from './components/AppLayout';
 import './App.css';
@@ -20,6 +21,7 @@ function App() {
 
           <Route element={<AdminRoute />}>
             <Route path="/employees" element={<EmployeePage />} />
+            <Route path="/report" element={<ReportPage />} />
           </Route>
         </Route>
       </Route>

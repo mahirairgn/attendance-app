@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, UseInterceptors, UploadedFile, BadRequestException, Query } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage, memoryStorage } from 'multer';
 import { extname } from 'path';
@@ -6,6 +6,9 @@ import { AttendanceService } from './attendance.service';
 import { CreateAttendanceDto } from './dto/create-attendance.dto';
 import { UpdateAttendanceDto } from './dto/update-attendance.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { EmployeeRole } from '../employees/entities/employee.entity';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('attendance')
@@ -34,12 +37,6 @@ export class AttendanceController {
     return this.attendanceService.createClockOut(req.user.sub, file);
   }
 
-  // TESTING PURPOSES ONLY
-  // @Get('/test')
-  // test() {
-  //   return this.attendanceService.test();
-  // }
-
   @Get()
   findAll() {
     return this.attendanceService.findAll();
@@ -53,6 +50,13 @@ export class AttendanceController {
   @Get('/history')
   getHistory(@Req() req) {
     return this.attendanceService.getHistory(req.user.sub);
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(EmployeeRole.ADMIN)
+  @Get('/report')
+  getDailyReport(@Query('date') date?: string) {
+    return this.attendanceService.getDailyReport(date);
   }
 
   @Get(':id')

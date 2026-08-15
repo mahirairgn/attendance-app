@@ -1,9 +1,10 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateAttendanceDto } from './dto/create-attendance.dto';
 import { UpdateAttendanceDto } from './dto/update-attendance.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThanOrEqual, Repository } from 'typeorm';
 import { Attendance } from './entities/attendance.entity';
+import { EmployeesService } from '../employees/employees.service';
 import { writeFile, mkdir } from 'fs/promises';
 import { join, extname, posix } from 'path';
 
@@ -11,7 +12,8 @@ import { join, extname, posix } from 'path';
 export class AttendanceService {
   constructor(
     @InjectRepository(Attendance)
-    private readonly attendanceRepo: Repository<Attendance>
+    private readonly attendanceRepo: Repository<Attendance>,
+    private readonly employeesService: EmployeesService
   ) {}
 
    private isWeekend(date: Date) {
@@ -104,6 +106,56 @@ export class AttendanceService {
       },
       order: { attendanceDate: 'DESC'}
     });
+  }
+
+  async getDailyReport(date?: string) {
+    const reportDate = date ?? this.todayDateString();
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(reportDate)) {
+      throw new BadRequestException('Format tanggal harus YYYY-MM-DD');
+    }
+
+    // Employees punya data karyawan, Attendance punya data absensi.
+    // Masing-masing diambil dari pemiliknya, lalu digabung di sini.
+    const employees = await this.employeesService.findAllActive();
+
+    const attendances = await this.attendanceRepo.find({
+      where: { attendanceDate: reportDate },
+      relations: { employee: true },
+    });
+
+    const byEmployeeId = new Map(attendances.map((a) => [a.employee.id, a]));
+
+    const isHoliday = this.isWeekend(new Date(`${reportDate}T00:00:00`));
+
+    const records = employees.map((employee) => {
+      const record = byEmployeeId.get(employee.id) ?? null;
+
+      let status: string;
+      if (isHoliday) {
+        status = 'Hari Libur';
+      } else if (!record) {
+        status = 'Tidak Hadir';
+      } else if (record.clockOutTime) {
+        status = 'Absen Penuh';
+      } else {
+        status = 'Belum Clock Out';
+      }
+
+      return {
+        employeeId: employee.employeeId,
+        fullName: employee.fullName,
+        position: employee.position,
+        division: employee.division,
+        clockInTime: record?.clockInTime ?? null,
+        clockOutTime: record?.clockOutTime ?? null,
+        clockInPhoto: record?.clockInPhoto ?? null,
+        clockOutPhoto: record?.clockOutPhoto ?? null,
+        status,
+      };
+    });
+
+    return { date: reportDate, isWorkingDay: !isHoliday, records };
   }
 
   update(id: number, updateAttendanceDto: UpdateAttendanceDto) {
