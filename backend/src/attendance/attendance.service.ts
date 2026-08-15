@@ -8,8 +8,13 @@ import { EmployeesService } from '../employees/employees.service';
 import { writeFile, mkdir } from 'fs/promises';
 import { join, extname, posix } from 'path';
 
+export type AttendanceStatus = 'holiday' | 'not_started' | 'in_progress' | 'completed' | 'absent';
+
 @Injectable()
 export class AttendanceService {
+  /** Jam pulang, dipakai buat nentuin kapan status boleh jadi ABSENT. Fixed untuk semua karyawan. */
+  private readonly WORK_END_HOUR = 17;
+
   constructor(
     @InjectRepository(Attendance)
     private readonly attendanceRepo: Repository<Attendance>,
@@ -30,10 +35,35 @@ export class AttendanceService {
     const day = String(now.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`; // Timezone: UTC+7
   }
-  
+
+  /** Tanggal yang sudah lewat: pasti sudah lewat jam pulang. Hari ini: cek jam sekarang. Masa depan: belum. */
+  private isPastWorkHours(dateString: string): boolean {
+    const today = this.todayDateString();
+    if (dateString < today) return true;
+    if (dateString > today) return false;
+    return new Date().getHours() >= this.WORK_END_HOUR;
+  }
+
+  private computeStatus(params: {
+    isHoliday: boolean;
+    dateString: string;
+    clockInTime: string | null;
+    clockOutTime: string | null;
+  }): AttendanceStatus {
+    if (params.isHoliday) return 'holiday';
+    if (params.clockOutTime) return 'completed';
+    if (params.clockInTime) return 'in_progress';
+    if (this.isPastWorkHours(params.dateString)) return 'absent';
+    return 'not_started';
+  }
+
   async createClockIn(employeeId: number, file: Express.Multer.File) {
     if (this.isWeekend(new Date())) {
       throw new ConflictException("Gagal! Hari ini adalah hari libur");
+    }
+
+    if (this.isPastWorkHours(this.todayDateString())) {
+      throw new ConflictException("Gagal! Jam kerja hari ini sudah berakhir");
     }
 
     const attendanceToday = (await this.getToday(employeeId)).attendance;
@@ -88,15 +118,25 @@ export class AttendanceService {
   }
 
   async getToday(employeeId: number) {
-    if (this.isWeekend(new Date())) {
-      return { isWorkingDay: false, attendance: null }
+    const dateString = this.todayDateString();
+    const isHoliday = this.isWeekend(new Date());
+
+    if (isHoliday) {
+      return { isWorkingDay: false, attendance: null, status: 'holiday' as AttendanceStatus };
     }
 
     const todayAttendance = await this.attendanceRepo.findOne({
-      where: { employee: { id: employeeId }, attendanceDate: this.todayDateString() }
+      where: { employee: { id: employeeId }, attendanceDate: dateString }
     });
-    
-    return { isWorkingDay: true, attendance: todayAttendance }
+
+    const status = this.computeStatus({
+      isHoliday: false,
+      dateString,
+      clockInTime: todayAttendance?.clockInTime ?? null,
+      clockOutTime: todayAttendance?.clockOutTime ?? null,
+    });
+
+    return { isWorkingDay: true, attendance: todayAttendance, status };
   }
 
   async getHistory(employeeId: number) {
@@ -132,16 +172,12 @@ export class AttendanceService {
     const records = employees.map((employee) => {
       const record = byEmployeeId.get(employee.id) ?? null;
 
-      let status: string;
-      if (isHoliday) {
-        status = 'Hari Libur';
-      } else if (!record) {
-        status = 'Tidak Hadir';
-      } else if (record.clockOutTime) {
-        status = 'Absen Penuh';
-      } else {
-        status = 'Belum Clock Out';
-      }
+      const status = this.computeStatus({
+        isHoliday,
+        dateString: reportDate,
+        clockInTime: record?.clockInTime ?? null,
+        clockOutTime: record?.clockOutTime ?? null,
+      });
 
       return {
         employeeId: employee.employeeId,

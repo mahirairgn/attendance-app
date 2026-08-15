@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 const { Title, Text } = Typography;
 const API_URL = 'http://localhost:3000';
 
-type Status = 'Absen Penuh' | 'Belum Clock Out' | 'Tidak Hadir' | 'Hari Libur';
+type Status = 'holiday' | 'not_started' | 'in_progress' | 'completed' | 'absent';
 
 interface ReportRecord {
   employeeId: string;
@@ -26,17 +26,26 @@ interface ReportResponse {
   records: ReportRecord[];
 }
 
+const STATUS_LABEL: Record<Status, string> = {
+  holiday: 'Hari Libur',
+  not_started: 'Belum Absen',
+  in_progress: 'Belum Clock Out',
+  completed: 'Absen Penuh',
+  absent: 'Alpa',
+};
+
 const STATUS_COLOR: Record<Status, string> = {
-  'Absen Penuh': 'success',
-  'Belum Clock Out': 'processing',
-  'Tidak Hadir': 'error',
-  'Hari Libur': 'default',
+  holiday: 'default',
+  not_started: 'default',
+  in_progress: 'processing',
+  completed: 'success',
+  absent: 'error',
 };
 
 const columns: ColumnsType<ReportRecord> = [
-  { title: 'Nama', dataIndex: 'fullName' },
+  { title: 'Name', dataIndex: 'fullName' },
   { title: 'ID', dataIndex: 'employeeId' },
-  { title: 'Divisi', dataIndex: 'division' },
+  { title: 'Division', dataIndex: 'division' },
   {
     title: 'Clock In',
     dataIndex: 'clockInTime',
@@ -50,7 +59,7 @@ const columns: ColumnsType<ReportRecord> = [
   {
     title: 'Status',
     dataIndex: 'status',
-    render: (status: Status) => <Tag color={STATUS_COLOR[status]}>{status}</Tag>,
+    render: (status: Status) => <Tag color={STATUS_COLOR[status]}>{STATUS_LABEL[status]}</Tag>,
   },
 ];
 
@@ -88,13 +97,13 @@ function ReportPage() {
 
   const records = report?.records ?? [];
   const sudahAbsen = records.filter((r) => r.clockInTime !== null).length;
-  const belumAbsen = records.filter((r) => r.status === 'Tidak Hadir').length;
+  const belumAbsen = records.filter((r) => r.status === 'absent' || r.status === 'not_started').length;
 
   return (
     <div className="report-page">
       <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
         <Title level={3} style={{ margin: 0 }}>
-          Absensi Karyawan
+          Employee Attendance Report
         </Title>
         <DatePicker
           value={dayjs(date)}

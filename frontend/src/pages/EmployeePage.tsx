@@ -171,29 +171,29 @@ function EmployeePage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || 'Gagal mengubah status karyawan');
+        throw new Error(data.message || 'Failed to update employee status');
       }
 
-      message.success(employee.active ? 'Karyawan dinonaktifkan' : 'Karyawan diaktifkan kembali');
+      message.success(employee.active ? 'Employee deactivated successfully' : 'Employee activated successfully');
       await fetchEmployees();
     } catch (err) {
-      message.error(err instanceof Error ? err.message : 'Gagal mengubah status karyawan');
+      message.error(err instanceof Error ? err.message : 'Failed to update employee status');
     } finally {
       setTogglingId(null);
     }
   }
 
   const columns: ColumnsType<Employee> = [
-    { title: 'Nama', dataIndex: 'fullName' },
+    { title: 'Name', dataIndex: 'fullName' },
     { title: 'ID', dataIndex: 'employeeId' },
     { title: 'Email', dataIndex: 'email' },
-    { title: 'Posisi', dataIndex: 'position' },
-    { title: 'Divisi', dataIndex: 'division' },
+    { title: 'Position', dataIndex: 'position' },
+    { title: 'Division', dataIndex: 'division' },
     {
       title: 'Role',
       dataIndex: 'role',
       render: (role: Employee['role']) => (
-        <Tag color={role === 'admin' ? 'purple' : 'default'}>
+        <Tag color={role === 'admin' ? 'purple' : 'default'} variant='outlined'>
           {role === 'admin' ? 'Admin' : 'Employee'}
         </Tag>
       ),
@@ -213,22 +213,24 @@ function EmployeePage() {
       title: 'Status',
       dataIndex: 'active',
       render: (active: boolean) => (
-        <Tag color={active ? 'success' : 'default'}>{active ? 'Aktif' : 'Nonaktif'}</Tag>
+        <Tag color={active ? 'success' : 'default'} variant='outlined'>
+          {active ? 'Active' : 'Inactive'}
+        </Tag>
       ),
       filters: [
         {
-          text: 'Aktif',
+          text: 'Active',
           value: 'true',
         },
         {
-          text: 'Nonaktif',
+          text: 'Inactive',
           value: 'false',
         }
       ],
       onFilter: (value, record) => record.active.toString() === value,
     },
     {
-      title: 'Aksi',
+      title: 'Action',
       key: 'action',
       render: (_, employee) => (
         <Space>
@@ -244,8 +246,8 @@ function EmployeePage() {
                 : undefined
             }
             onConfirm={() => toggleActive(employee)}
-            okText="Ya"
-            cancelText="Batal"
+            okText="Yes"
+            cancelText="Cancel"
           >
             <Button
               size="small"
@@ -253,7 +255,7 @@ function EmployeePage() {
               icon={employee.active ? <StopOutlined /> : <UndoOutlined />}
               loading={togglingId === employee.id}
             >
-              {employee.active ? 'Nonaktifkan' : 'Aktifkan'}
+              {employee.active ? 'Deactivate' : 'Activate'}
             </Button>
           </Popconfirm>
         </Space>
@@ -272,7 +274,7 @@ function EmployeePage() {
           icon={<PlusOutlined />}
           onClick={() => openAdd()}
         >
-          Tambah Karyawan
+          New
         </Button>
       </Space>
 
@@ -290,27 +292,27 @@ function EmployeePage() {
       )}
 
       <Modal
-        title={isAddOpen ? 'Tambah Karyawan' : 'Edit Karyawan'}
+        title={isAddOpen ? 'Add Employee' : 'Edit Employee'}
         open={isAddOpen || editingEmployee !== null}
         onOk={isAddOpen ? handleAddSubmit : handleEditSubmit}
         onCancel={() => { setIsAddOpen(false); setEditingEmployee(null); }}
         confirmLoading={saving}
-        okText="Simpan"
-        cancelText="Batal"
+        okText="Update"
+        cancelText="Cancel"
       >
         <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
           <Form.Item
             name="employeeId"
-            label="ID Karyawan"
-            rules={[{ required: true, message: 'ID Karyawan wajib diisi' }]}
+            label="Employee ID"
+            rules={[{ required: true, message: 'Employee ID is required' }]}
           >
             <Input value={editingEmployee?.employeeId} disabled={!!editingEmployee?.employeeId} />
           </Form.Item>
 
           <Form.Item
             name="name"
-            label="Nama"
-            rules={[{ required: true, message: 'Nama wajib diisi' }]}
+            label="Name"
+            rules={[{ required: true, message: 'Nama is required' }]}
           >
             <Input />
           </Form.Item>
@@ -325,16 +327,16 @@ function EmployeePage() {
 
           <Form.Item
             name="position"
-            label="Posisi"
-            rules={[{ required: true, message: 'Posisi wajib diisi' }]}
+            label="Position"
+            rules={[{ required: true, message: 'Position is required' }]}
           >
             <Input />
           </Form.Item>
 
           <Form.Item
             name="division"
-            label="Divisi"
-            rules={[{ required: true, message: 'Divisi wajib diisi' }]}
+            label="Division"
+            rules={[{ required: true, message: 'Division is required' }]}
           >
             <Input />
           </Form.Item>

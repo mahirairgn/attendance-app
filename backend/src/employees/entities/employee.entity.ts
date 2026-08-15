@@ -21,7 +21,8 @@ export class Employee {
   @Column({ unique: true })
   email!: string;
 
-  @Column( {name: 'password_hash' })
+  /** select: false -- jangan pernah ikut kebawa di query biasa (findAll, findOne, dst). */
+  @Column({ name: 'password_hash', select: false })
   password!: string;
 
   @Column({ name: 'employee_id', unique: true })

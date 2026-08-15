@@ -54,7 +54,7 @@ export class AttendanceController {
     return this.attendanceService.getHistory(req.user.sub);
   }
 
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles(EmployeeRole.ADMIN)
   @Get('/report')
   getDailyReport(@Query('date') date?: string) {

@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
-import DashboardPage from './pages/DashboardPage';
+import HomePage from './pages/HomePage';
 import EmployeePage from './pages/EmployeePage';
 import HistoryPage from './pages/HistoryPage';
 import ReportPage from './pages/ReportPage';
@@ -16,7 +16,7 @@ function App() {
 
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
-          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/home" element={<HomePage />} />
           <Route path="/history" element={<HistoryPage />} />
 
           <Route element={<AdminRoute />}>
@@ -26,7 +26,7 @@ function App() {
         </Route>
       </Route>
 
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/" element={<Navigate to="/home" replace />} />
     </Routes>
   );
 }

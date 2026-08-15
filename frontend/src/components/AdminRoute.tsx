@@ -5,7 +5,7 @@ function AdminRoute() {
   const payload = decodeToken();
 
   if (payload?.role !== 'admin') {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/home" replace />;
   }
 
   return <Outlet />;

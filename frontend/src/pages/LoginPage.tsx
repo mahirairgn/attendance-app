@@ -30,7 +30,7 @@ function LoginPage() {
       }
 
       localStorage.setItem('access_token', data.access_token);
-      navigate('/dashboard', { replace: true });
+      navigate('/home', { replace: true });
     } catch (err) {
       message.error(err instanceof Error ? err.message : 'Login gagal');
     } finally {

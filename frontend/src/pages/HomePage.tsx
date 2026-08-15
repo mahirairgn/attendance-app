@@ -5,9 +5,12 @@ import { CameraOutlined, CheckCircleFilled } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import Link from 'antd/es/typography/Link';
 import { viewAttendancePhoto } from '../lib/viewPhoto';
+import { formatDuration, toSeconds } from '../lib/duration';
 
 const { Text } = Typography;
 const API_URL = 'http://localhost:3000';
+
+type AttendanceStatus = 'holiday' | 'not_started' | 'in_progress' | 'completed' | 'absent';
 
 interface Attendance {
   id: number;
@@ -19,21 +22,10 @@ interface Attendance {
 interface TodayResponse {
   isWorkingDay: boolean;
   attendance: Attendance | null;
+  status: AttendanceStatus;
 }
 
-function toSeconds(time: string): number {
-  const [h, m, s] = time.split(':').map(Number);
-  return h * 3600 + m * 60 + (s || 0);
-}
-
-function formatDuration(seconds: number): string {
-  if (seconds < 0) return '-';
-  const jam = Math.floor(seconds / 3600);
-  const menit = Math.floor((seconds % 3600) / 60);
-  return `${jam} jam ${menit} menit`;
-}
-
-function DashboardPage() {
+function HomePage() {
   const navigate = useNavigate();
   const [today, setToday] = useState<TodayResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,10 +37,8 @@ function DashboardPage() {
 
   useEffect(() => {
     fetchToday();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Jam berjalan
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
@@ -109,7 +99,6 @@ function DashboardPage() {
       const formData = new FormData();
       formData.append('photo', file);
 
-      // Content-Type sengaja tidak di-set: browser yang isi otomatis beserta boundary-nya
       const res = await fetch(`${API_URL}/attendance/${action}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
@@ -134,23 +123,16 @@ function DashboardPage() {
   const attendance = today?.attendance ?? null;
   const clockIn = attendance?.clockInTime ?? null;
   const clockOut = attendance?.clockOutTime ?? null;
+  const status = today?.status;
 
-  const status = !today?.isWorkingDay
-    ? 'libur'
-    : clockOut
-      ? 'selesai'
-      : clockIn
-        ? 'bekerja'
-        : 'belum';
-
-  const durasi = clockIn
+  const duration = clockIn
     ? formatDuration(
         (clockOut ? toSeconds(clockOut) : toSeconds(now.toTimeString().slice(0, 8))) -
           toSeconds(clockIn),
       )
     : null;
 
-  const tanggal = now.toLocaleDateString('id-ID', {
+  const date = now.toLocaleDateString('en-GB', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -158,15 +140,16 @@ function DashboardPage() {
   });
 
   return (
-    <div className="dashboard">
-      <div className="dashboard-clock">
-        <Text type="secondary">{tanggal}</Text>
-        <div className="dashboard-time">{now.toTimeString().slice(0, 8)}</div>
+    <div className="home">
+      <div className="home-clock">
+        <Text type="secondary">{date}</Text>
+        <div className="home-time">{now.toTimeString().slice(0, 8)}</div>
 
-        {status === 'libur' && <Tag>Hari Libur</Tag>}
-        {status === 'belum' && <Tag color="warning">Belum Clock In</Tag>}
-        {status === 'bekerja' && <Tag color="processing">Sedang Bekerja</Tag>}
-        {status === 'selesai' && <Tag color="success">Absensi Selesai</Tag>}
+        {status === 'holiday' && <Tag variant="outlined">Holiday</Tag>}
+        {status === 'not_started' && <Tag color="warning" variant="outlined">Not Clocked In</Tag>}
+        {status === 'in_progress' && <Tag color="processing" variant="outlined">Clocked In</Tag>}
+        {status === 'completed' && <Tag color="success" variant="outlined">Clocked Out</Tag>}
+        {status === 'absent' && <Tag color="error" variant="outlined">Absent</Tag>}
       </div>
 
       <Card styles={{ body: { padding: 24 } }}>
@@ -174,42 +157,47 @@ function DashboardPage() {
           <div style={{ textAlign: 'center', padding: 32 }}>
             <Spin />
           </div>
-        ) : status === 'libur' ? (
+        ) : status === 'holiday' ? (
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description="Tidak ada shift hari ini. Selamat berlibur!"
+            description="There is no shift scheduled for today. Have a great day off!"
+          />
+        ) : status === 'absent' ? (
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description="You have not recorded your attendance for today."
           />
         ) : (
           <>
-            <div className="dashboard-times">
+            <div className="home-times">
               <div>
                 <Text type="secondary">Clock In</Text>
-                <div className={`dashboard-stamp ${clockIn ? '' : 'is-empty'}`}>
+                <div className={`home-stamp ${clockIn ? '' : 'is-empty'}`}>
                   {clockIn ?? '--:--:--'}
                 </div>
-                {clockIn && <Link onClick={() => handleViewPhoto('clock-in')}>Lihat Foto</Link>}
+                {clockIn && <Link onClick={() => handleViewPhoto('clock-in')}> View Photo</Link>}
               </div>
 
               <Divider orientation="vertical" style={{ height: 48 }} />
 
               <div>
                 <Text type="secondary">Clock Out</Text>
-                <div className={`dashboard-stamp ${clockOut ? '' : 'is-empty'}`}>
+                <div className={`home-stamp ${clockOut ? '' : 'is-empty'}`}>
                   {clockOut ?? '--:--:--'}
                 </div>
-                {clockOut && <Link onClick={() => handleViewPhoto('clock-out')}>Lihat Foto</Link>}
+                {clockOut && <Link onClick={() => handleViewPhoto('clock-out')}>View Photo</Link>}
               </div>
             </div>
 
-            {durasi && (
-              <div className="dashboard-duration">
-                <Text type="secondary">Durasi kerja</Text>
-                <Text strong>{durasi}</Text>
+            {duration && (
+              <div className="home-duration">
+                <Text type="secondary">Work Duration</Text>
+                <Text strong>{duration}</Text>
               </div>
             )}
 
             <div style={{ marginTop: 24 }}>
-              {status === 'belum' && (
+              {status === 'not_started' && (
                 <Button
                   type="primary"
                   size="large"
@@ -222,7 +210,7 @@ function DashboardPage() {
                 </Button>
               )}
 
-              {status === 'bekerja' && (
+              {status === 'in_progress' && (
                 <Button
                   type="primary"
                   danger
@@ -236,17 +224,17 @@ function DashboardPage() {
                 </Button>
               )}
 
-              {status === 'selesai' && (
-                <div className="dashboard-done">
+              {status === 'completed' && (
+                <div className="home-done">
                   <CheckCircleFilled style={{ color: '#52c41a' }} />
-                  <Text type="secondary">Absensi hari ini sudah lengkap</Text>
+                  <Text type="secondary">Your attendance for today is complete</Text>
                 </div>
               )}
             </div>
 
-            {status !== 'selesai' && (
-              <Text type="secondary" className="dashboard-hint">
-                Kamu akan diminta mengambil foto sebelum absensi tersimpan.
+            {status !== 'completed' && (
+              <Text type="secondary" className="home-hint">
+                You will need to upload a photo to record your attendance.
               </Text>
             )}
           </>
@@ -265,4 +253,4 @@ function DashboardPage() {
   );
 }
 
-export default DashboardPage;
+export default HomePage;
