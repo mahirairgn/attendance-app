@@ -26,13 +26,13 @@ function LoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || 'Login gagal');
+        throw new Error(data.message || 'Login failed');
       }
 
       localStorage.setItem('access_token', data.access_token);
       navigate('/home', { replace: true });
     } catch (err) {
-      message.error(err instanceof Error ? err.message : 'Login gagal');
+      message.error(err instanceof Error ? err.message : 'Login failed');
     } finally {
       setLoading(false);
     }

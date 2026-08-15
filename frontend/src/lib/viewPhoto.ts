@@ -10,7 +10,7 @@ export async function getAttendancePhotoUrl(
 
   if (!res.ok) {
     const data = await res.json().catch(() => null);
-    throw new Error(data?.message || 'Gagal memuat foto');
+    throw new Error(data?.message || 'Failed to load photo');
   }
 
   const blob = await res.blob();

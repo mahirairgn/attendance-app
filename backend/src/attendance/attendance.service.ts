@@ -8,7 +8,13 @@ import { EmployeesService } from '../employees/employees.service';
 import { writeFile, mkdir } from 'fs/promises';
 import { join, extname, posix } from 'path';
 
-export type AttendanceStatus = 'holiday' | 'not_started' | 'in_progress' | 'completed' | 'absent';
+export type AttendanceStatus =
+  | 'holiday'
+  | 'not_started'
+  | 'in_progress'
+  | 'completed'
+  | 'missing_out'
+  | 'absent';
 
 @Injectable()
 export class AttendanceService {
@@ -52,23 +58,28 @@ export class AttendanceService {
   }): AttendanceStatus {
     if (params.isHoliday) return 'holiday';
     if (params.clockOutTime) return 'completed';
-    if (params.clockInTime) return 'in_progress';
+
+    if (params.clockInTime) {
+      const isPastDate = params.dateString < this.todayDateString();
+      return isPastDate ? 'missing_out' : 'in_progress';
+    }
+
     if (this.isPastWorkHours(params.dateString)) return 'absent';
     return 'not_started';
   }
 
   async createClockIn(employeeId: number, file: Express.Multer.File) {
     if (this.isWeekend(new Date())) {
-      throw new ConflictException("Gagal! Hari ini adalah hari libur");
+      throw new ConflictException("Failed! Today is a non-working day");
     }
 
     if (this.isPastWorkHours(this.todayDateString())) {
-      throw new ConflictException("Gagal! Jam kerja hari ini sudah berakhir");
+      throw new ConflictException("Failed! Today's working hours have already ended");
     }
 
     const attendanceToday = (await this.getToday(employeeId)).attendance;
     if (attendanceToday) {
-      throw new ConflictException("Gagal! Clock In hari ini sudah dilakukan")
+      throw new ConflictException("Failed! You have already clocked in for today");
     }
 
     const dir = './uploads/attendance/clockin';
@@ -87,16 +98,16 @@ export class AttendanceService {
 
   async createClockOut(employeeId: number, file: Express.Multer.File) {
     if (this.isWeekend(new Date())) {
-      throw new ConflictException("Gagal! Hari ini adalah hari libur");
+      throw new ConflictException("Failed! Today is a non-working day");
     }
 
     const attendanceToday = (await this.getToday(employeeId)).attendance;
     if (!attendanceToday) {
-      throw new NotFoundException("Gagal! Harap melakukan Clock In terlebih dahulu")
+      throw new NotFoundException("Failed! Please clock in first before clocking out");
     }
 
     if (attendanceToday.clockOutTime) {
-      throw new ConflictException("Gagal! Clock Out hari ini sudah dilakukan")
+      throw new ConflictException("Failed! You have already clocked out for today")
     }
 
     const dir = './uploads/attendance/clockout';
@@ -153,7 +164,7 @@ export class AttendanceService {
     const reportDate = date ?? this.todayDateString();
 
     if (!/^\d{4}-\d{2}-\d{2}$/.test(reportDate)) {
-      throw new BadRequestException('Format tanggal harus YYYY-MM-DD');
+      throw new BadRequestException('Date format must be YYYY-MM-DD');
     }
 
     // Employees punya data karyawan, Attendance punya data absensi.
@@ -180,6 +191,7 @@ export class AttendanceService {
       });
 
       return {
+        id: record?.id ?? null,
         employeeId: employee.employeeId,
         fullName: employee.fullName,
         position: employee.position,
@@ -206,17 +218,17 @@ export class AttendanceService {
     });
 
     if (!attendance) {
-      throw new NotFoundException('Data absensi tidak ditemukan');
+      throw new NotFoundException('Attendance record not found');
     }
 
     const isOwner = attendance.employee.id === requester.sub;
     if (!isOwner && requester.role !== 'admin') {
-      throw new ForbiddenException('Tidak boleh mengakses foto absensi karyawan lain');
+      throw new ForbiddenException("You are not allowed to access another employee's attendance photo");
     }
 
     const photoPath = type === 'clock-in' ? attendance.clockInPhoto : attendance.clockOutPhoto;
     if (!photoPath) {
-      throw new NotFoundException('Foto tidak ditemukan');
+      throw new NotFoundException('Photo not found');
     }
 
     return photoPath;

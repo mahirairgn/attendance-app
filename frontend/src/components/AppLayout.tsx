@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Avatar, Button, Dropdown, Form, Input, Layout, Menu, Modal, Space, Typography, message } from 'antd';
+import { Avatar, Dropdown, Form, Input, Layout, Menu, Modal, Space, Typography, message } from 'antd';
 import {
   ClockCircleFilled,
   DownOutlined,
@@ -50,10 +50,10 @@ function AppLayout() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || 'Gagal mengubah password');
+        throw new Error(data.message || 'Failed to change password');
       }
 
-      message.success('Password berhasil diubah');
+      message.success('Password changed successfully');
       setPasswordModalOpen(false);
       passwordForm.resetFields();
     } catch (err) {
@@ -150,14 +150,14 @@ function AppLayout() {
           passwordForm.resetFields();
         }}
         confirmLoading={changingPassword}
-        okText="Simpan"
-        cancelText="Batal"
+        okText="Save"
+        cancelText="Cancel"
       >
         <Form form={passwordForm} layout="vertical" style={{ marginTop: 16 }}>
           <Form.Item
             name="currentPassword"
             label="Current Password"
-            rules={[{ required: true, message: 'Password saat ini wajib diisi' }]}
+            rules={[{ required: true, message: 'Current password is required' }]}
           >
             <Input.Password />
           </Form.Item>
@@ -166,8 +166,8 @@ function AppLayout() {
             name="newPassword"
             label="New Password"
             rules={[
-              { required: true, message: 'Password baru wajib diisi' },
-              { min: 8, message: 'Password baru minimal 8 karakter' },
+              { required: true, message: 'New password is required' },
+              { min: 8, message: 'New password must be at least 8 characters' },
             ]}
           >
             <Input.Password />
@@ -178,13 +178,13 @@ function AppLayout() {
             label="Confirm New Password"
             dependencies={['newPassword']}
             rules={[
-              { required: true, message: 'Konfirmasi password baru wajib diisi' },
+              { required: true, message: 'Please confirm your new password' },
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   if (!value || getFieldValue('newPassword') === value) {
                     return Promise.resolve();
                   }
-                  return Promise.reject(new Error('Konfirmasi password tidak cocok'));
+                  return Promise.reject(new Error('Passwords do not match'));
                 },
               }),
             ]}

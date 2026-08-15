@@ -23,7 +23,7 @@ export class AttendanceController {
   )
   clockIn(@Req() req, @UploadedFile() file: Express.Multer.File) {
     if (!file) {
-      throw new BadRequestException('Foto wajib diupload');
+      throw new BadRequestException('Photo is required');
     }
     return this.attendanceService.createClockIn(req.user.sub, file);
   }
@@ -34,7 +34,7 @@ export class AttendanceController {
   )
   clockOut(@Req() req, @UploadedFile() file: Express.Multer.File) {
     if (!file) {
-      throw new BadRequestException('Foto wajib diupload');
+      throw new BadRequestException('Photo is required');
     }
     return this.attendanceService.createClockOut(req.user.sub, file);
   }
@@ -69,7 +69,7 @@ export class AttendanceController {
     @Res({ passthrough: true }) res: Response,
   ) {
     if (type !== 'clock-in' && type !== 'clock-out') {
-      throw new BadRequestException('Tipe foto tidak valid');
+      throw new BadRequestException('Invalid photo type');
     }
 
     const filePath = await this.attendanceService.getPhotoPath(+id, type, req.user);

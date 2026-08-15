@@ -10,7 +10,7 @@ import { formatDuration, toSeconds } from '../lib/duration';
 const { Text } = Typography;
 const API_URL = 'http://localhost:3000';
 
-type AttendanceStatus = 'holiday' | 'not_started' | 'in_progress' | 'completed' | 'absent';
+type AttendanceStatus = 'holiday' | 'not_started' | 'in_progress' | 'completed' | 'missing_out' | 'absent';
 
 interface Attendance {
   id: number;
@@ -61,12 +61,12 @@ function HomePage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || 'Gagal mengambil data absensi hari ini');
+        throw new Error(data.message || "Failed to load today's attendance");
       }
 
       setToday(data);
     } catch (err) {
-      message.error(err instanceof Error ? err.message : 'Gagal mengambil data');
+      message.error(err instanceof Error ? err.message : 'Failed to load data');
     } finally {
       setLoading(false);
     }
@@ -83,7 +83,7 @@ function HomePage() {
     try {
       await viewAttendancePhoto(attendance.id, type);
     } catch (err) {
-      message.error(err instanceof Error ? err.message : 'Gagal memuat foto');
+      message.error(err instanceof Error ? err.message : 'Failed to load photo');
     }
   }
 
@@ -108,13 +108,13 @@ function HomePage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || 'Gagal menyimpan absensi');
+        throw new Error(data.message || 'Failed to save attendance');
       }
 
-      message.success(action === 'clock-in' ? 'Clock In berhasil' : 'Clock Out berhasil');
+      message.success(action === 'clock-in' ? 'Clock In successful' : 'Clock Out successful');
       await fetchToday();
     } catch (err) {
-      message.error(err instanceof Error ? err.message : 'Gagal menyimpan absensi');
+      message.error(err instanceof Error ? err.message : 'Failed to save attendance');
     } finally {
       setSubmitting(false);
     }
@@ -125,10 +125,13 @@ function HomePage() {
   const clockOut = attendance?.clockOutTime ?? null;
   const status = today?.status;
 
+  const WORK_END_HOUR = 17; // harus sama dengan WORK_END_HOUR di backend (attendance.service.ts)
+  const nowSeconds = toSeconds(now.toTimeString().slice(0, 8));
+  const cutoffSeconds = WORK_END_HOUR * 3600;
+
   const duration = clockIn
     ? formatDuration(
-        (clockOut ? toSeconds(clockOut) : toSeconds(now.toTimeString().slice(0, 8))) -
-          toSeconds(clockIn),
+        (clockOut ? toSeconds(clockOut) : Math.min(nowSeconds, cutoffSeconds)) - toSeconds(clockIn),
       )
     : null;
 

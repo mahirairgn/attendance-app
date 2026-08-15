@@ -64,12 +64,12 @@ function EmployeePage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || 'Gagal mengambil data karyawan');
+        throw new Error(data.message || 'Failed to load employees');
       }
 
       setEmployees(data);
     } catch (err) {
-      message.error(err instanceof Error ? err.message : 'Gagal mengambil data karyawan');
+      message.error(err instanceof Error ? err.message : 'Failed to load employees');
     } finally {
       setLoading(false);
     }
@@ -98,10 +98,10 @@ function EmployeePage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || 'Gagal menambahkan karyawan');
+        throw new Error(data.message || 'Failed to add employee');
       }
 
-      message.success('Karyawan berhasil ditambahkan');
+      message.success('Employee added successfully');
       setIsAddOpen(false);
       await fetchEmployees();
     } catch (err) {
@@ -142,10 +142,10 @@ function EmployeePage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || 'Gagal menyimpan perubahan');
+        throw new Error(data.message || 'Failed to save changes');
       }
 
-      message.success('Data karyawan diperbarui');
+      message.success('Employee updated successfully');
       setEditingEmployee(null);
       await fetchEmployees();
     } catch (err) {
@@ -239,10 +239,10 @@ function EmployeePage() {
           </Button>
 
           <Popconfirm
-            title={employee.active ? 'Nonaktifkan karyawan ini?' : 'Aktifkan kembali karyawan ini?'}
+            title={employee.active ? 'Deactivate this employee?' : 'Reactivate this employee?'}
             description={
               employee.active
-                ? 'Karyawan tidak akan bisa login setelah dinonaktifkan.'
+                ? 'The employee will no longer be able to log in once deactivated.'
                 : undefined
             }
             onConfirm={() => toggleActive(employee)}
@@ -312,7 +312,7 @@ function EmployeePage() {
           <Form.Item
             name="name"
             label="Name"
-            rules={[{ required: true, message: 'Nama is required' }]}
+            rules={[{ required: true, message: 'Name is required' }]}
           >
             <Input />
           </Form.Item>
@@ -320,7 +320,7 @@ function EmployeePage() {
           <Form.Item
             name="email"
             label="Email"
-            rules={[{ required: true, type: 'email', message: 'Email tidak valid' }]}
+            rules={[{ required: true, type: 'email', message: 'Please enter a valid email' }]}
           >
             <Input />
           </Form.Item>
@@ -344,7 +344,7 @@ function EmployeePage() {
           <Form.Item
             name="role"
             label="Role"
-            rules={[{ required: true, message: 'Role wajib dipilih' }]}
+            rules={[{ required: true, message: 'Role is required' }]}
           >
             <Select
               value={role}

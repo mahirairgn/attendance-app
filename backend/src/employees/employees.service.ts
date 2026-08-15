@@ -17,7 +17,7 @@ export class EmployeesService {
     const existing = await this.employeeRepo.findOne({ where: { [field]: value } });
     if (existing && existing.id !== excludeId) {
       const label = field === 'email' ? 'Email' : 'Employee ID (NIK)';
-      throw new ConflictException(`${label} sudah digunakan, silakan gunakan yang lain`);
+      throw new ConflictException(`${label} is already in use, please use another one`);
     }
   }
 
@@ -78,7 +78,7 @@ export class EmployeesService {
   async updatePassword(id: number, hashedPassword: string) {
     const employee = await this.employeeRepo.findOne({ where: { id } });
     if (!employee) {
-      throw new NotFoundException(`Employee dengan ID ${id} tidak ditemukan`);
+      throw new NotFoundException(`Employee with ID ${id} not found`);
     }
 
     employee.password = hashedPassword;
@@ -88,7 +88,7 @@ export class EmployeesService {
   async update(id: number, updateEmployeeDto: UpdateEmployeeDto) {
     const employee = await this.employeeRepo.findOne({ where: { id } });
     if (!employee) {
-      throw new NotFoundException(`Employee dengan ID ${id} tidak ditemukan`);
+      throw new NotFoundException(`Employee with ID ${id} not found`);
     }
 
     if (updateEmployeeDto.email) {

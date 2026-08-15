@@ -16,24 +16,24 @@ export class AuthService {
     const user = await this.employeesService.findByEmail(loginDto.email);
 
     if (!user) {
-      throw new UnauthorizedException ("Email belum terdaftar. Harap hubungi Admin HR!")
+      throw new UnauthorizedException ("Email is not registered. Please contact your HR Admin!")
     }
-    
+
     if (!user.active) {
-      throw new UnauthorizedException ("Email sudah tidak aktif. Harap hubungi Admin HR!")
+      throw new UnauthorizedException ("This account is no longer active. Please contact your HR Admin!")
     }
 
     const isMatch = await bcrypt.compare(loginDto.password, user.password);
 
     if (!isMatch) {
-      throw new UnauthorizedException ("Password salah!")
+      throw new UnauthorizedException ("Wrong password!")
     }
 
     const payload = { sub: user.id, email: user.email, role: user.role }
 
     return {
       access_token: await this.jwtService.signAsync(payload),
-      message: "Login berhasil!"
+      message: "Login success!"
     };
   }
 
@@ -41,17 +41,17 @@ export class AuthService {
     const user = await this.employeesService.findOneWithPassword(userId);
 
     if (!user) {
-      throw new UnauthorizedException('User tidak ditemukan');
+      throw new UnauthorizedException('User not found');
     }
 
     const isMatch = await bcrypt.compare(dto.currentPassword, user.password);
     if (!isMatch) {
-      throw new UnauthorizedException('Password saat ini salah');
+      throw new UnauthorizedException('Incorrect password!');
     }
 
     const hashed = await bcrypt.hash(dto.newPassword, 10);
     await this.employeesService.updatePassword(userId, hashed);
 
-    return { message: 'Password berhasil diubah' };
+    return { message: 'Password updated successfully' };
   }
 }

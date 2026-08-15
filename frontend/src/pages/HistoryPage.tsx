@@ -70,12 +70,12 @@ function HistoryPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || 'Gagal mengambil riwayat absensi');
+        throw new Error(data.message || 'Failed to load attendance history');
       }
 
       setHistory(data);
     } catch (err) {
-      message.error(err instanceof Error ? err.message : 'Gagal mengambil riwayat absensi');
+      message.error(err instanceof Error ? err.message : 'Failed to load attendance history');
     } finally {
       setLoading(false);
     }
@@ -100,7 +100,7 @@ function HistoryPage() {
       setClockInPhoto(inUrl);
       setClockOutPhoto(outUrl);
     } catch (err) {
-      message.error(err instanceof Error ? err.message : 'Gagal memuat foto');
+      message.error(err instanceof Error ? err.message : 'Failed to load photo');
     } finally {
       setPhotoLoading(false);
     }
@@ -199,7 +199,7 @@ function HistoryPage() {
         footer={null}
       >
         {detail && (
-          <Space direction="vertical" size={16} style={{ width: '100%' }}>
+          <Space orientation="vertical" size={16} style={{ width: '100%' }}>
             <div>
               <Text type="secondary">Date</Text>
               <div>{formatDate(detail.attendanceDate)}</div>
