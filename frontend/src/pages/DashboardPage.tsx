@@ -4,6 +4,7 @@ import { Button, Card, Divider, Empty, Spin, Tag, Typography, message } from 'an
 import { CameraOutlined, CheckCircleFilled } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import Link from 'antd/es/typography/Link';
+import { viewAttendancePhoto } from '../lib/viewPhoto';
 
 const { Text } = Typography;
 const API_URL = 'http://localhost:3000';
@@ -84,6 +85,16 @@ function DashboardPage() {
   function pickPhoto(action: 'clock-in' | 'clock-out') {
     actionRef.current = action;
     photoInputRef.current?.click();
+  }
+
+  async function handleViewPhoto(type: 'clock-in' | 'clock-out') {
+    if (!attendance) return;
+
+    try {
+      await viewAttendancePhoto(attendance.id, type);
+    } catch (err) {
+      message.error(err instanceof Error ? err.message : 'Gagal memuat foto');
+    }
   }
 
   async function handlePhotoSelected(e: ChangeEvent<HTMLInputElement>) {
@@ -176,9 +187,7 @@ function DashboardPage() {
                 <div className={`dashboard-stamp ${clockIn ? '' : 'is-empty'}`}>
                   {clockIn ?? '--:--:--'}
                 </div>
-                <Link href="https://ant.design" target="_blank">
-                  Lihat Foto
-                </Link>
+                {clockIn && <Link onClick={() => handleViewPhoto('clock-in')}>Lihat Foto</Link>}
               </div>
 
               <Divider orientation="vertical" style={{ height: 48 }} />
@@ -188,9 +197,7 @@ function DashboardPage() {
                 <div className={`dashboard-stamp ${clockOut ? '' : 'is-empty'}`}>
                   {clockOut ?? '--:--:--'}
                 </div>
-                <Link href="https://ant.design" target="_blank">
-                  Lihat Foto
-                </Link>
+                {clockOut && <Link onClick={() => handleViewPhoto('clock-out')}>Lihat Foto</Link>}
               </div>
             </div>
 

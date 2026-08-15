@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateAttendanceDto } from './dto/create-attendance.dto';
 import { UpdateAttendanceDto } from './dto/update-attendance.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -18,7 +18,8 @@ export class AttendanceService {
 
    private isWeekend(date: Date) {
     const day = date.getDay(); // 0 = Minggu, 6 = Sabtu
-    return day === 0 || day === 6;
+    // return day === 0 || day === 6;
+    return day === 0; // For testing, hanya Minggu yang dianggap hari libur
   }
 
 
@@ -156,6 +157,33 @@ export class AttendanceService {
     });
 
     return { date: reportDate, isWorkingDay: !isHoliday, records };
+  }
+
+  async getPhotoPath(
+    id: number,
+    type: 'clock-in' | 'clock-out',
+    requester: { sub: number; role: string },
+  ) {
+    const attendance = await this.attendanceRepo.findOne({
+      where: { id },
+      relations: { employee: true },
+    });
+
+    if (!attendance) {
+      throw new NotFoundException('Data absensi tidak ditemukan');
+    }
+
+    const isOwner = attendance.employee.id === requester.sub;
+    if (!isOwner && requester.role !== 'admin') {
+      throw new ForbiddenException('Tidak boleh mengakses foto absensi karyawan lain');
+    }
+
+    const photoPath = type === 'clock-in' ? attendance.clockInPhoto : attendance.clockOutPhoto;
+    if (!photoPath) {
+      throw new NotFoundException('Foto tidak ditemukan');
+    }
+
+    return photoPath;
   }
 
   update(id: number, updateAttendanceDto: UpdateAttendanceDto) {

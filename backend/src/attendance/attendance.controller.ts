@@ -1,6 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, UseInterceptors, UploadedFile, BadRequestException, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Res, UseInterceptors, UploadedFile, BadRequestException, Query, StreamableFile } from '@nestjs/common';
+import type { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage, memoryStorage } from 'multer';
+import { createReadStream } from 'fs';
 import { extname } from 'path';
 import { AttendanceService } from './attendance.service';
 import { CreateAttendanceDto } from './dto/create-attendance.dto';
@@ -57,6 +59,23 @@ export class AttendanceController {
   @Get('/report')
   getDailyReport(@Query('date') date?: string) {
     return this.attendanceService.getDailyReport(date);
+  }
+
+  @Get(':id/photo/:type')
+  async getPhoto(
+    @Param('id') id: string,
+    @Param('type') type: 'clock-in' | 'clock-out',
+    @Req() req,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    if (type !== 'clock-in' && type !== 'clock-out') {
+      throw new BadRequestException('Tipe foto tidak valid');
+    }
+
+    const filePath = await this.attendanceService.getPhotoPath(+id, type, req.user);
+    const mime = extname(filePath).toLowerCase() === '.png' ? 'image/png' : 'image/jpeg';
+    res.set({ 'Content-Type': mime });
+    return new StreamableFile(createReadStream(filePath));
   }
 
   @Get(':id')

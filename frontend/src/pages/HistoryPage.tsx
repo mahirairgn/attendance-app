@@ -1,6 +1,8 @@
-import { Empty, message, Space, Spin, Table, Typography } from "antd";
+import { Button, Empty, message, Space, Spin, Table, Typography } from "antd";
+import { PictureOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
+import { viewAttendancePhoto } from "../lib/viewPhoto";
 
 const { Title } = Typography;
 const API_URL = 'http://localhost:3000';
@@ -42,6 +44,14 @@ function HistoryPage() {
     }
   }
 
+  async function handleViewPhoto(attendanceId: number, type: 'clock-in' | 'clock-out') {
+    try {
+      await viewAttendancePhoto(attendanceId, type);
+    } catch (err) {
+      message.error(err instanceof Error ? err.message : 'Gagal memuat foto');
+    }
+  }
+
   const columns: ColumnsType<Attendance> = [
     {
       title: 'Tanggal',
@@ -57,12 +67,38 @@ function HistoryPage() {
     {
       title: 'Clock In',
       dataIndex: 'clockInTime',
-      render: (waktu: string | null) => waktu ?? '-',
+      render: (waktu: string | null, record) =>
+        waktu ? (
+          <Space size={4}>
+            {waktu}
+            <Button
+              type="text"
+              size="small"
+              icon={<PictureOutlined />}
+              onClick={() => handleViewPhoto(record.id, 'clock-in')}
+            />
+          </Space>
+        ) : (
+          '-'
+        ),
     },
     {
       title: 'Clock Out',
       dataIndex: 'clockOutTime',
-      render: (waktu: string | null) => waktu ?? '-',
+      render: (waktu: string | null, record) =>
+        waktu ? (
+          <Space size={4}>
+            {waktu}
+            <Button
+              type="text"
+              size="small"
+              icon={<PictureOutlined />}
+              onClick={() => handleViewPhoto(record.id, 'clock-out')}
+            />
+          </Space>
+        ) : (
+          '-'
+        ),
     },
   ];
 
