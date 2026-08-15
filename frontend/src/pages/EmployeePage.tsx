@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { 
   Button,
   Form,
@@ -46,6 +46,7 @@ function EmployeePage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [saving, setSaving] = useState(false);
+  const [search, setSearch] = useState('');
   const [togglingId, setTogglingId] = useState<number | null>(null);
   const [form] = Form.useForm<EditFormValues>();
 
@@ -183,6 +184,15 @@ function EmployeePage() {
     }
   }
 
+  const filteredEmployees = useMemo(() => {
+  if (!search.trim()) return employees;
+  const query = search.trim().toLowerCase();
+  return employees.filter((e) =>
+    [e.fullName, e.employeeId, e.email, e.position, e.division]
+      .some((field) => field.toLowerCase().includes(query))
+  );
+}, [employees, search]);
+
   const columns: ColumnsType<Employee> = [
     { title: 'Name', dataIndex: 'fullName' },
     { title: 'ID', dataIndex: 'employeeId' },
@@ -197,7 +207,7 @@ function EmployeePage() {
           {role === 'admin' ? 'Admin' : 'Employee'}
         </Tag>
       ),
-        filters: [
+      filters: [
         {
           text: 'Admin',
           value: 'admin',
@@ -283,13 +293,23 @@ function EmployeePage() {
           <Spin />
         </div>
       ) : (
-        <Table
-          rowKey="id"
-          columns={columns}
-          dataSource={employees}
-          scroll={{ x: 'max-content' }}
-          pagination={{ pageSize: 10 }}
-        />
+        <>
+          <Input.Search
+            placeholder="Search by employee name"
+            allowClear
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ marginBottom: 16 }}
+          />
+
+          <Table
+            rowKey="id"
+            columns={columns}
+            dataSource={filteredEmployees}
+            scroll={{ x: 'max-content' }}
+            pagination={{ pageSize: 10 }}
+          />
+        </>
       )}
 
       <Modal

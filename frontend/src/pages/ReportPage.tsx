@@ -109,8 +109,10 @@ function ReportPage() {
   const filteredRecords = useMemo(() => {
     if (!search.trim()) return records;
     const query = search.trim().toLowerCase();
-    return records.filter((r) => r.fullName.toLowerCase().includes(query));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return records.filter((r) =>
+      [r.fullName, r.employeeId, r.position, r.division, r.status]
+        .some((field) => field.toLowerCase().includes(query))
+    );
   }, [records, search]);
 
   const columns: ColumnsType<ReportRecord> = [
@@ -139,6 +141,7 @@ function ReportPage() {
       title: 'Status',
       dataIndex: 'status',
       render: (status: AttendanceStatus) => <AttendanceStatusTag status={status} />,
+
     },
     {
       title: '',
